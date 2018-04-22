@@ -78,7 +78,8 @@ class Game:
         self.mapPic = pg.image.load(os.path.join(mapFolder, 'l1.png')).convert_alpha()
         self.mapWIDTH = self.mapPic.get_width; self.mapHEIGHT = self.mapPic.get_height
         self.dimScreen = pg.Surface(self.screen.get_size()).convert_alpha(); self.dimScreen.fill((0, 0, 0, 200))
-        self.playerImgFemale = self.playerImg =  pg.image.load(os.path.join(femaleFolder, 'ante.png')).convert_alpha()
+        self.playerImgFemale =  pg.image.load(os.path.join(femaleFolder, 'ante.png')).convert_alpha()
+        self.playerImgMale = pg.image.load(os.path.join(maleFolder, 'ante.png')).convert_alpha()
         self.femalePreview = pg.image.load(os.path.join(plyrSpriteFolder, 'female.png')).convert_alpha(); self.femalePreview = pg.transform.scale(self.femalePreview, (500,500))
         self.malePreview = pg.image.load (os.path.join(plyrSpriteFolder, 'male.png')).convert_alpha(); self.malePreview = pg.transform.scale(self.malePreview, (500,500))
         self.menuNukem = pg.image.load(os.path.join(menuFolder, "main.jpg")).convert(); self.menuNukem = pg.transform.scale(self.menuNukem, (500,500))
@@ -164,6 +165,10 @@ class Game:
         actualGame = save.readGame()
         self.gender = actualGame[0]; self.lifeLevel = actualGame[1]; self.gameLevel = actualGame[2]
         print("i'm a {} and i have {} percent life and i'm in level {}".format(actualGame[0],self.lifeLevel, self.gameLevel))
+        if self.gender == 'male':
+            self.playerImg = self.playerImgMale
+        else:
+            self.playerImg = self.playerImgFemale
         self.picCoordinates = playerAnimation('noneDown', self.gender)
         self.washTheScreen(); pg.key.set_repeat(100, 100); self.previousState = self.state
         self.state = 'game'
@@ -331,15 +336,14 @@ class Game:
                 if self.maleChoiceBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorMale = self.colorWhite; self.actualChoicePreview = self.malePreview
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print("male"); """save.newGame("male")"""
-                        print("YOU CAN ONLY PLAY FEMALE FOR NOW")
+                        print("male"); save.newGame("male"); self.continueGame()
                         break
                 else:
                     self.textColorMale = self.colorGrey; self.actualChoicePreview = self.screenWasher
                 if self.femaleChoiceBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorFemale = self.colorWhite; self.actualChoicePreview = self.femalePreview
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print("female"); save.newGame("female"); self.gender = "female"; self.continueGame()
+                        print("female"); save.newGame("female"); self.continueGame()
                         break
                 else:
                     self.textColorFemale = self.colorGrey

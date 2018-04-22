@@ -7,39 +7,42 @@ vec = math.Vector2
 WIDTH = 1280
 HEIGHT = 720
 TITLE = "EXODUS (PRE-BETA RELEASE -- GITHUB EDITION)"
-perso_x = 1280/2
-perso_y = 720/2
 playerAnimationLoop = 1
-f_playerCoordinatesDown = {1:(2,0,30,33), 2:(32,0,33,32), 3:(64,0,31,33)}
-f_playerCoordinatesLeft = {1:(4,33,27,31), 2:(36,32,25,33), 3:(68,33,24,31)}
-f_playerCoordinatesRight = {1:(1,65,27,31), 2:(35,64,25,32), 3:(68,65,24,31)}
-f_playerCoordinatesUp = {1:(3,97,28,31), 2:(33,96,31,32), 3:(66,97,28,31)}
+playerCoordinates = {"female":{"down":{1:(2,0,30,33), 2:(32,0,33,32), 3:(64,0,31,33)},
+                                "left":{1:(4,33,27,31), 2:(36,32,25,33), 3:(68,33,24,31)},
+                                "right":{1:(1,65,27,31), 2:(35,64,25,32), 3:(68,65,24,31)},
+                                "up":{1:(3,97,28,31), 2:(33,96,31,32), 3:(66,97,28,31)}},
+                     "male":{"down":{1:(4,1,26,31), 2:(35,0,27,32), 3:(68,0,26,32)},
+                             "left":{1:(3,33,25,31), 2:(35,32,25,32), 3:(67,33,25,31)},
+                             "right":{1:(4,65,25,31), 2:(36,64,25,32), 3:(68,65,25,31)},
+                             "up":{1:(3,97,26,31), 2:(35,96,26,32), 3:(67,97,26,31)}}
+                    }
 
 ################################################################################
 #                          PLAYER ANIMATION                                    #
 ################################################################################
 def playerAnimation(direction, gender):
-    global playerCoordinatesDown, playerAnimationLoop
+    global playerCoordinates, playerAnimationLoop
     playerAnimationLoop += 2
     if playerAnimationLoop >= 4:
         playerAnimationLoop = 1
-    if gender == 'female':
-        if direction == 'down':
-            return f_playerCoordinatesDown[playerAnimationLoop]
-        elif direction == 'noneDown':
-            return f_playerCoordinatesDown[2]
-        elif direction == 'left':
-            return f_playerCoordinatesLeft[playerAnimationLoop]
-        elif direction == 'noneLeft':
-            return f_playerCoordinatesLeft[2]
-        elif direction == 'right':
-            return f_playerCoordinatesRight[playerAnimationLoop]
-        elif direction == 'noneRight':
-            return f_playerCoordinatesRight[2]
-        elif direction == 'up':
-            return f_playerCoordinatesUp[playerAnimationLoop]
-        elif direction == 'noneUp':
-            return f_playerCoordinatesUp[2]
+    playerCoordinatesLast = playerCoordinates[gender]
+    if direction == 'down' or direction == 'up' or direction == 'left' or direction == 'right':
+            playerCoordinatesLast = playerCoordinatesLast[direction]
+            return playerCoordinatesLast[playerAnimationLoop]
+    elif direction == 'noneDown':
+        playerCoordinatesLast = playerCoordinatesLast["down"]
+        return playerCoordinatesLast[2]
+    elif direction == 'noneLeft':
+        playerCoordinatesLast = playerCoordinatesLast["left"]
+        return playerCoordinatesLast[playerAnimationLoop]
+    elif direction == 'noneRight':
+        playerCoordinatesLast = playerCoordinatesLast["right"]
+        return playerCoordinatesLast[2]
+    elif direction == 'noneUp':
+        playerCoordinatesLast = playerCoordinatesLast["up"]
+        return playerCoordinatesLast[2]
+
 
 POS = (753.00,143.67)
 
