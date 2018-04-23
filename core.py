@@ -35,9 +35,9 @@ class Game:
                 self.clear()
                 self.run()
             else:
-                self.mainMenu()
+                self.changeMenu("mainMenu")
         else:
-            self.mainMenu()
+            self.changeMenu("mainMenu")
 
     # >>> HERE'S THE GOD MODE, FOR THE GOD DAMN CREATOR ! >>>
     def debug(self):
@@ -110,48 +110,20 @@ class Game:
         self.mainMenuMusic = pg.mixer.Sound(os.path.join(musicFolder, 'mainMenu.ogg'))
         self.playMusic = pg.mixer.Sound(os.path.join(musicFolder, 'play.ogg'))
 
-    # >>> SHOW THE MAIN MENU >>>
-    def mainMenu(self):
-       self.washTheScreen(); pg.key.set_repeat(0, 100); self.previousState = self.state
-       pg.mouse.set_visible(True)
-       if not pg.mixer.Channel(0).get_busy() or pg.mixer.Channel(0).get_sound() != self.mainMenuMusic:
-           if self.musicState == "ON":
-               pg.mixer.Channel(0).play(self.mainMenuMusic, -1)
-       self.state = 'mainMenu'
-       self.run()
-
-    # >>> SHOW THE PLAY MENU >>>
-    def playMenu(self):
-        self.washTheScreen(); pg.key.set_repeat(0, 100); self.previousState = self.state
-        self.state = 'playMenu'
-        self.run()
-
-    # >>> SHOW THE NEW GAME MENU >>>
-    def newGame(self):
-        self.washTheScreen(); pg.key.set_repeat(0, 100); self.previousState = self.state
-        self.state = 'newGame'
-        self.run()
-
-    # >>> SHOW THE HELP MENU >>>
-    def helpMenu(self):
-        self.washTheScreen(); pg.key.set_repeat(0, 100); self.previousState = self.state
-        self.state = 'helpMenu'
-        self.run()
-
-    # >>> SHOW THE SETTINGS MENU >>>
-    def settingsMenu(self):
-        self.washTheScreen(); pg.key.set_repeat(0, 100); self.previousState = self.state
-        self.state = 'settingsMenu'
-        self.run()
-
-    # >>> PAUSE THE GAME >>>
-    def pause(self):
+    # >>> CHANGE THE MENU YOU ARE INTO >>>
+    def changeMenu (self, nextState):
         pg.key.set_repeat(0, 100); self.previousState = self.state; pg.mouse.set_visible(True)
-        save.saveGame(self.gender, self.lifeLevel, self.gameLevel)
-        self.screen.blit(self.dimScreen,(0,0))
-        if self.musicState == "ON":
-            pg.mixer.Channel(0).pause()
-        self.state = 'pause'
+        if nextState == "pause":
+            self.screen.blit(self.dimScreen,(0,0))
+            if self.musicState == "ON" and pg.mixer.Channel(0).get_busy():
+                pg.mixer.Channel(0).pause()
+        else:
+            self.washTheScreen()
+            if nextState == "mainMenu":
+                if not pg.mixer.Channel(0).get_busy() or pg.mixer.Channel(0).get_sound() != self.mainMenuMusic:
+                    if self.musicState == "ON":
+                        pg.mixer.Channel(0).play(self.mainMenuMusic, -1)
+        self.state = nextState
         self.run()
 
     # >>> LET THE MAGIC HAPPEN >>>
@@ -164,7 +136,7 @@ class Game:
                 pg.mixer.Channel(0).unpause()
         actualGame = save.readGame()
         self.gender = actualGame[0]; self.lifeLevel = actualGame[1]; self.gameLevel = actualGame[2]
-        print("i'm a {} and i have {} percent life and i'm in level {}".format(actualGame[0],self.lifeLevel, self.gameLevel))
+        print("I'm a {} and I have {} percent life and I'm in level {}".format(actualGame[0],self.lifeLevel, self.gameLevel))
         if self.gender == 'male':
             self.playerImg = self.playerImgMale
         else:
@@ -303,7 +275,7 @@ class Game:
                 if self.mainMenuBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorMainMenu = self.colorWhite; self.actualChoicePreview = self.malePreview
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print("main menu"); self.mainMenu()
+                        print("main menu"); self.changeMenu("mainMenu")
                         break
                 else:
                     self.textColorMainMenu = self.colorGrey
@@ -320,7 +292,7 @@ class Game:
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
                         print("resume game"); self.continueGame()
                     if event.key == pg.K_SEMICOLON:
-                        print("main menu"); self.mainMenu()
+                        print("main menu"); self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
                     self.quit()
         # ========================================== NEW GAME ======================================================== #
@@ -329,7 +301,7 @@ class Game:
                 if self.returnBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorReturn = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('return'); self.playMenu()
+                        print('return'); self.changeMenu("mainMenu")
                         break
                 else:
                     self.textColorReturn = self.colorGrey
@@ -353,7 +325,7 @@ class Game:
                     if event.key == pg.K_SEMICOLON:
                         print("male")
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
-                        print("return"); self.playMenu()
+                        print("return"); self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
                     self.areYouSure()
         # ========================================== SETTINGS MENU =================================================== #
@@ -397,7 +369,7 @@ class Game:
                 if self.returnBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorReturn = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('return'); save.saveSettings(self.musicState, self.fullscreenState, self.displayFPS); self.mainMenu()
+                        print('return'); save.saveSettings(self.musicState, self.fullscreenState, self.displayFPS); self.changeMenu("mainMenu")
                         break
                 else:
                     self.textColorReturn = self.colorGrey
@@ -425,7 +397,7 @@ class Game:
                 if self.noBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorNo= self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('no'); self.mainMenu()
+                        print('no'); self.changeMenu("mainMenu")
                         break
                 else:
                     self.textColorNo = self.colorGrey
@@ -433,7 +405,7 @@ class Game:
                     if event.key == pg.K_y:
                         print('yes'); self.quit()
                     if event.key == pg.K_n or event.key == pg.K_ESCAPE:
-                        print('no'); self.mainMenu()
+                        print('no'); self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
                     self.quit()
         # ========================================== SURE TO DESTROY SCREEN ========================================== #
@@ -446,14 +418,14 @@ class Game:
                         if self.lastDestroy == "settings":
                             save.resetSettings(); self.restartGame()
                         elif self.lastDestroy == "saves":
-                            save.resetSave(); self.settingsMenu()
+                            save.resetSave(); self.changeMenu("settingsMenu")
                         break
                 else:
                     self.textColorYes = self.colorGrey
                 if self.noBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorNo= self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('no'); self.settingsMenu()
+                        print('no'); self.changeMenu("settingsMenu")
                         break
                 else:
                     self.textColorNo = self.colorGrey
@@ -463,9 +435,9 @@ class Game:
                         if self.lastDestroy == "settings":
                             save.resetSettings(); self.restartGame()
                         elif self.lastDestroy == "saves":
-                            save.resetSave(); self.settingsMenu()
+                            save.resetSave(); self.changeMenu("settingsMenu")
                     if event.key == pg.K_n or event.key == pg.K_ESCAPE:
-                        print('no'); self.settingsMenu()
+                        print('no'); self.changeMenu("settingsMenu")
                 if event.type == pg.QUIT:
                     self.areYouSure()
         # ========================================== PLAY MENU ======================================================= #
@@ -483,14 +455,14 @@ class Game:
                     if self.newGameBlit.collidepoint(pg.mouse.get_pos()) == True:
                         self.textColorNewGame= self.colorWhite
                         if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                            print('new game'); self.newGame()
+                            print('new game'); self.changeMenu("newGame")
                             break
                     else:
                         self.textColorNewGame = self.colorGrey
                 if self.returnBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorReturn = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('return'); self.mainMenu()
+                        print('return'); self.changeMenu("mainMenu")
                         break
                 else:
                     self.textColorReturn = self.colorGrey
@@ -498,9 +470,9 @@ class Game:
                     if event.key == pg.K_c:
                         print('continue')
                     if event.key == pg.K_n:
-                        print('new game'); self.newGame()
+                        print('new game'); self.changeMenu("newGame")
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
-                        print('return'); self.mainMenu()
+                        print('return'); self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
                     self.areYouSure(); print('quit')
         # ========================================== MAIN MENU ======================================================= #
@@ -509,21 +481,21 @@ class Game:
                 if self.playOptionBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorPlay = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('play'); self.playMenu()
+                        print('play'); self.changeMenu("playMenu")
                         break
                 else:
                     self.textColorPlay = self.colorGrey
                 if self.settingsOptionBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorSettings = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('settings'); self.settingsMenu()
+                        print('settings'); self.changeMenu("settingsMenu")
                         break
                 else:
                     self.textColorSettings = self.colorGrey
                 if self.helpOptionBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorHelp = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('help'); self.helpMenu()
+                        print('help'); self.changeMenu("helpMenu")
                         break
                 else:
                     self.textColorHelp = self.colorGrey
@@ -536,11 +508,11 @@ class Game:
                     self.textColorQuit = self.colorGrey
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_p:
-                        print('play'); self.playMenu()
+                        print('play'); self.changeMenu("playMenu")
                     if event.key == pg.K_s:
-                        print('settings'); self.settingsMenu()
+                        print('settings'); self.changeMenu("settingsMenu")
                     if event.key == pg.K_h:
-                        print('help'); self.helpMenu()
+                        print('help'); self.changeMenu("helpMenu")
                     if event.key == pg.K_a or event.key == pg.K_ESCAPE:
                         print('quit'); self.areYouSure()
                 if event.type == pg.QUIT:
@@ -551,13 +523,13 @@ class Game:
                 if self.returnBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorReturn = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('return'); self.mainMenu()
+                        print('return'); self.changeMenu("mainMenu")
                         break
                 else:
                     self.textColorReturn = self.colorGrey
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
-                        print('return'); self.mainMenu()
+                        print('return'); self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
                     self.areYouSure()
 
