@@ -261,7 +261,7 @@ class Game:
                     elif self.lastMove == "-Y":
                         self.picCoordinates = playerAnimation('noneUp', self.gender)
                 if event.type == pg.QUIT:
-                    self.pause()
+                    self.changeMenu("pause")
         # ========================================== PAUSE SCREEN ==================================================== #
         if self.state == 'pause':
             for event in pg.event.get():
