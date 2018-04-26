@@ -35,7 +35,7 @@ def playerAnimation(direction, gender):
         return playerCoordinatesLast[2]
     elif direction == 'noneLeft':
         playerCoordinatesLast = playerCoordinatesLast["left"]
-        return playerCoordinatesLast[playerAnimationLoop]
+        return playerCoordinatesLast[2]
     elif direction == 'noneRight':
         playerCoordinatesLast = playerCoordinatesLast["right"]
         return playerCoordinatesLast[2]

@@ -251,6 +251,8 @@ class Game:
                         self.posX -= 16; self.lastMove = "-X"; self.scrolling()
                     if event.key == pg.K_ESCAPE:
                         self.changeMenu("pause")
+                    if event.key == pg.K_F11:
+                        self.toggleFullscreen(); print('fullscreen toggled to ' + str(self.fullscreenState))
                 elif event.type == pg.KEYUP:
                     if self.lastMove == "+Y":
                         self.picCoordinates = playerAnimation('noneDown', self.gender)
