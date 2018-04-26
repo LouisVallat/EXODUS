@@ -250,7 +250,7 @@ class Game:
                         self.picCoordinates = playerAnimation('left',self.gender)
                         self.posX -= 16; self.lastMove = "-X"; self.scrolling()
                     if event.key == pg.K_ESCAPE:
-                        self.pause()
+                        self.changeMenu("pause")
                 elif event.type == pg.KEYUP:
                     if self.lastMove == "+Y":
                         self.picCoordinates = playerAnimation('noneDown', self.gender)
