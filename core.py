@@ -289,7 +289,7 @@ class Game:
                 else:
                     self.textColorQuitGame = self.colorGrey
                 if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_z:
+                    if event.key == pg.K_a:
                         print("quit"); self.areYouSure()
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
                         print("resume game"); self.continueGame()
