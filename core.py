@@ -22,6 +22,7 @@ class Game:
         self.decalageX, self.decalageY = 128,0
         pg.mixer.pre_init(44100, -16, 4, 2048)
         pg.init()
+        pg.joystick.init
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         self.clock = pg.time.Clock()
         pg.mouse.set_visible(True)
@@ -61,6 +62,7 @@ class Game:
         plyrSpriteFolder = self.playerFolder = os.path.join(imgFolder,'player')
         femaleFolder = self.femaleFolder = os.path.join(plyrSpriteFolder, 'female'); maleFolder  = self.maleFolder = os.path.join(plyrSpriteFolder,'male')
         musicFolder = os.path.join(gameFolder, 'music')
+        fxFolder = os.path.join(musicFolder,'fx')
         fontFolder = os.path.join(gameFolder, 'font')
         loadingFolder = os.path.join(imgFolder, 'loading')
         menuFolder = os.path.join(imgFolder, 'menus')
@@ -69,9 +71,11 @@ class Game:
         self.clear = lambda: os.system('cls')
         self.loadingScreen = pg.image.load(os.path.join(loadingFolder, 'loading.png')).convert_alpha()
         self.warningVersion = pg.image.load(os.path.join(loadingFolder, "warn.png")).convert_alpha()
+        self.dialogBox = pg.image.load(os.path.join(menuFolder, 'ui.png')).convert_alpha(); #self.dialogBox = pg.transform.scale(self.dialogBox, (1280,300))
         self.state = 'loadingScreen'; self.renderWindow()
         self.guiFont= pg.font.Font(os.path.join(fontFolder, 'Savior1.ttf'), 95)
         self.guiFontSub = pg.font.Font(os.path.join(fontFolder, 'Savior1.ttf'), 65)
+        self.dialogFont = pg.font.Font(os.path.join(fontFolder, 'ToxTypewriter.ttf'), 45)
         self.screenWasher = pg.Surface(self.screen.get_size()).convert_alpha(); self.screenWasher.fill((0, 0, 0, 255))
         self.colorGrey = (128,128,128); self.colorWhite = (255,255,255)
         self.allSprites = pg.sprite.LayeredUpdates()
@@ -85,23 +89,26 @@ class Game:
         self.menuNukem = pg.image.load(os.path.join(menuFolder, "main.jpg")).convert(); self.menuNukem = pg.transform.scale(self.menuNukem, (500,500))
         self.playButton = pg.image.load(os.path.join(menuFolder, "play.jpg")).convert(); self.playButton = pg.transform.scale(self.playButton, (500,500))
         self.settingsWheel = pg.image.load(os.path.join(menuFolder, "settings.jpg")).convert()
+        self.musicIcon = pg.image.load(os.path.join(menuFolder, "music.jpg")).convert()
         self.actualChoicePreview = self.screenWasher
         self.textColorPlay = self.textColorSettings = self.textColorHelp = self.textColorQuit = self.colorGrey
         self.textColorContinue = self.textColorNewGame = self.textColorReturn = self.colorGrey
         self.textColorMale = self.textColorFemale = self.textColorReturn = self.colorGrey
         self.textColorMusicToggle = self.textColorFullscreenToggle = self.textColordisplayFPSToggle = self.resetSaveColor = self.resetSettingsColor = self.textColorReturn = self.colorGrey
         self.textColorResume = self.textColorQuitGame = self.textColorMainMenu = self.colorGrey
-        self.textColorReturn = self.colorGrey
-        self.textColorYes = self.textColorNo = self.colorGrey
+        self.textColorMusicPlus = self.textColorMusicMoins = self.textColorFxPlus = self.textColorFxMoins = self.colorGrey
+        self.textColorReturn = self.colorMusicMenu = self.colorGrey
+        self.textColorYes = self.textColorNo = self.textColorMusicMenu = self.colorGrey
         self.lastMove = "+Y"
         self.mapPosX = self.decalageX; self.mapPosY = self.decalageY
         if os.path.isfile("settings.txt"):
             settingsSaved = save.readSettings()
             self.musicState=settingsSaved[0]; self.fullscreenState=settingsSaved[1]; self.displayFPS=settingsSaved[2]
+            self.musicLevel=float(settingsSaved[3]); self.fxLevel=float(settingsSaved[4])
             if self.fullscreenState == "ON":
                 pg.display.set_mode((WIDTH, HEIGHT), pg.FULLSCREEN)
         else:
-            self.musicState = "ON"; self.displayFPS = "OFF"; self.fullscreenState = "OFF"
+            self.musicState = "ON"; self.displayFPS = "OFF"; self.fullscreenState = "OFF"; self.musicLevel = 0.5; self.fxLevel = 1
         self.wallsList = []
         for walls in WALLS:
             self.wallsList.append((walls[0]+self.decalageX, walls[1]+self.decalageY,
@@ -109,15 +116,25 @@ class Game:
         self.posX = POS[0]+self.decalageX; self.posY = POS[1]+self.decalageY
         self.mainMenuMusic = pg.mixer.Sound(os.path.join(musicFolder, 'mainMenu.ogg'))
         self.playMusic = pg.mixer.Sound(os.path.join(musicFolder, 'play.ogg'))
+        self.positiveFx = pg.mixer.Sound(os.path.join(fxFolder, 'positive.ogg'));self.negativeFx = pg.mixer.Sound(os.path.join(fxFolder, 'negative.ogg'))
+        self.changeMenuFx = pg.mixer.Sound(os.path.join(fxFolder, 'changeMenu.ogg'))
+        print("Joystick/Controller detected : " + str(pg.joystick.get_count()))
+        if pg.joystick.get_count() >= 1:
+            pg.joystick.Joystick(0).init()
+            print("Hats detected : " + str(pg.joystick.Joystick(0).get_numhats()))
+            print("Joystick name : " + str(pg.joystick.Joystick(0).get_name()))
 
     # >>> CHANGE THE MENU YOU ARE INTO >>>
     def changeMenu (self, nextState):
         pg.key.set_repeat(0, 100); self.previousState = self.state; pg.mouse.set_visible(True)
         if nextState == "pause":
             self.screen.blit(self.dimScreen,(0,0))
+            save.saveGame(self.gender, self.lifeLevel, self.gameLevel)
             if self.musicState == "ON" and pg.mixer.Channel(0).get_busy():
                 pg.mixer.Channel(0).pause()
         else:
+            if self.musicState == "ON":
+                pg.mixer.Channel(1).play(self.changeMenuFx, 0)
             self.washTheScreen()
             if nextState == "mainMenu":
                 if not pg.mixer.Channel(0).get_busy() or pg.mixer.Channel(0).get_sound() != self.mainMenuMusic:
@@ -146,30 +163,16 @@ class Game:
         self.state = 'game'
         self.run()
 
-    # >>> VERIFY IF THE PLAYER WANTS TO QUIT GAME >>>
-    def areYouSure(self):
-        self.washTheScreen(); pg.key.set_repeat(0, 100); self.previousState = self.state
-        pg.mouse.set_visible(True)
-        self.state = 'areYouSureToQuit'
-        self.run()
-
-    # >>> VERIFY IF THE PLAYER WANTS TO QUIT GAME >>>
-    def areYouSureToDestroy(self):
-        self.washTheScreen(); pg.key.set_repeat(0, 100); self.previousState = self.state
-        self.state = 'areYouSureToDestroy'
-        self.run()
-
-    # >>> WASH THE SCREEN >>>
-    def washTheScreen(self):
-        self.screen.blit(self.screenWasher, (0,0))
-        pg.display.update()
-
     # >>> TOGGLE FULLSCREEN MODE >>>
     def toggleFullscreen(self):
         if self.screen.get_flags() != pg.FULLSCREEN:
             pg.display.set_mode((WIDTH, HEIGHT), pg.FULLSCREEN); self.fullscreenState = "ON"
+            if self.musicState == "ON":
+                pg.mixer.Channel(1).play(self.positiveFx, 0)
         else:
             pg.display.set_mode((WIDTH, HEIGHT)); self.fullscreenState = "OFF"
+            if self.musicState == "ON":
+                pg.mixer.Channel(1).play(self.negativeFx, 0)
 
     # >>> TOGGLE MUSIC STATE >>>
     def toggleMusic(self):
@@ -180,18 +183,23 @@ class Game:
         else:
             self.musicState = "ON"
             pg.mixer.Channel(0).play(self.mainMenuMusic, -1)
+            pg.mixer.Channel(1).play(self.positiveFx, 0)
 
     # >>> TOGGLE FPS COUNTER >>>
     def toggleFPS(self):
         if self.displayFPS == "ON":
             self.displayFPS = "OFF"
+            if self.musicState == "ON":
+                pg.mixer.Channel(1).play(self.negativeFx, 0)
         else:
             self.displayFPS = "ON"
+            if self.musicState == "ON":
+                pg.mixer.Channel(1).play(self.positiveFx, 0)
 
     # >>> INFINITE LOOP TO LISTEN KEYS AND THEN RENDER WINDOW >>>
     def run(self):
         while True:
-            self.clock.tick(60);
+            self.clock.tick(60); self.lastUpdate = pg.time.get_ticks()
             if self.displayFPS == "ON":
                 pg.display.set_caption(str(TITLE)+"  -- FPS :"+str(int(self.clock.get_fps())))
             else:
@@ -199,6 +207,7 @@ class Game:
             self.renderWindow()
             if self.state == "game":
                 self.collideWithWalls()
+            pg.mixer.Channel(0).set_volume(self.musicLevel); pg.mixer.Channel(1).set_volume(self.fxLevel)
             self.KeyListener()
 
     # >>> COLLISION DETECTION (WITH WALLS OF COURSE) >>>
@@ -231,12 +240,45 @@ class Game:
                 self.wallsList.append((walls[0]+self.decalageX, walls[1]+self.decalageY,
                         walls[2], walls[3]))
 
+    # >>> NICE DIALOG BOX >>>
+    def dialogBoxShow(self, character, text):
+        pg.key.set_repeat(0, 100); self.previousState = self.state; pg.mouse.set_visible(True)
+        save.saveGame(self.gender, self.lifeLevel, self.gameLevel)
+        self.screen.blit(self.dimScreen,(0,0))
+        character += str(" said :")
+        self.whoSpoke = character; self.textDialog = text
+        self.state = "dialog"
+        self.run()
+
+    # >>> CHANGE MUSIC AND EFFECTS VOLUME >>>
+    def changeVolume(self, channel, moreOrLess):
+        self.washTheScreen()
+        if moreOrLess == "more":
+            if channel == "music":
+                self.musicLevel += 0.25
+                if self.musicLevel >= 1.25:
+                    self.musicLevel = 1.0
+            if channel == "fx":
+                self.fxLevel += 0.25
+                if self.fxLevel >= 1.25:
+                    self.fxLevel = 1.0
+        if moreOrLess == "less":
+            if channel == "music":
+                self.musicLevel -= 0.25
+                if self.musicLevel <= 0:
+                    self.musicLevel = 0.25
+            if channel == "fx":
+                self.fxLevel -= 0.25
+                if self.fxLevel <= 0:
+                    self.fxLevel = 0.25
+
     # >>> LISTEN INPUT FROM PLAYER (MOUSE, KEYS,...) >>>
     def KeyListener(self):
         # ========================================== GAME STATE ====================================================== #
         if self.state == 'game':
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
+                    #print("Your position is X=" + str(self.posX) + " and Y=" + str(self.posY))
                     if event.key == pg.K_s or event.key == pg.K_DOWN:
                         self.picCoordinates = playerAnimation('down',self.gender)
                         self.posY += 16; self.lastMove = "+Y"; self.scrolling()
@@ -251,6 +293,11 @@ class Game:
                         self.posX -= 16; self.lastMove = "-X"; self.scrolling()
                     if event.key == pg.K_ESCAPE:
                         self.changeMenu("pause")
+                    if self.posX >= 975 and self.posY <= 995:
+                        if self.posY >= 285:
+                            if not L1EVENTLIST[0]:
+                                L1EVENTLIST[0] = True
+                                self.dialogBoxShow("GOD",["Welcome in this game.", "Enjoy! And please report bugs."])
                     if event.key == pg.K_F11:
                         self.toggleFullscreen(); print('fullscreen toggled to ' + str(self.fullscreenState))
                 elif event.type == pg.KEYUP:
@@ -262,8 +309,13 @@ class Game:
                         self.picCoordinates = playerAnimation('noneLeft', self.gender)
                     elif self.lastMove == "-Y":
                         self.picCoordinates = playerAnimation('noneUp', self.gender)
-                if event.type == pg.QUIT:
+                elif event.type == pg.QUIT:
                     self.changeMenu("pause")
+        # ========================================== DIALOG BOX ====================================================== #
+        if self.state == 'dialog':
+            for event in pg.event.get():
+                if event.type == pg.KEYUP and event.key == pg.K_RETURN:
+                    self.continueGame()
         # ========================================== PAUSE SCREEN ==================================================== #
         if self.state == 'pause':
             for event in pg.event.get():
@@ -284,13 +336,13 @@ class Game:
                 if self.quitGameBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorQuitGame = self.colorWhite; self.actualChoicePreview = self.femalePreview
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print("quit game"); self.areYouSure()
+                        print("quit game"); self.changeMenu("areYouSureToQuit")
                         break
                 else:
                     self.textColorQuitGame = self.colorGrey
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_a:
-                        print("quit"); self.areYouSure()
+                        print("quit"); self.changeMenu("areYouSureToQuit")
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
                         print("resume game"); self.continueGame()
                     if event.key == pg.K_SEMICOLON:
@@ -323,15 +375,15 @@ class Game:
                     self.textColorFemale = self.colorGrey
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_f:
-                        print("female")
+                        print("female"); save.newGame("female"); self.continueGame()
                     if event.key == pg.K_SEMICOLON:
-                        print("male")
+                        print("male"); save.newGame("male"); self.continueGame()
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
                         print("return"); self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
-                    self.areYouSure()
+                    self.changeMenu("areYouSureToQuit")
         # ========================================== SETTINGS MENU =================================================== #
-        if self.state == 'settingsMenu':
+        if self.state == 'musicMenu':
             for event in pg.event.get():
                 if self.musicToggleBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorMusicToggle = self.colorWhite
@@ -340,6 +392,60 @@ class Game:
                         break
                 else:
                     self.textColorMusicToggle = self.colorGrey
+                if self.musicButtonMoinsBlit.collidepoint(pg.mouse.get_pos()) == True:
+                    self.textColorMusicMoins = self.colorWhite
+                    if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                        self.changeVolume("music","less"); print("music - volume set to " +str(self.musicLevel))
+                        break
+                else:
+                    self.textColorMusicMoins = self.colorGrey
+                if self.musicButtonPlusBlit.collidepoint(pg.mouse.get_pos()) == True:
+                    self.textColorMusicPlus = self.colorWhite
+                    if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                        self.changeVolume("music","more"); print("music + volume set to " +str(self.musicLevel))
+                        break
+                else:
+                    self.textColorMusicPlus = self.colorGrey
+                if self.fxButtonMoinsBlit.collidepoint(pg.mouse.get_pos()) == True:
+                    self.textColorFxMoins = self.colorWhite
+                    if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                        self.changeVolume("fx","less"); print("fx - volume set to " +str(self.musicLevel))
+                        break
+                else:
+                    self.textColorFxMoins = self.colorGrey
+                if self.fxButtonPlusBlit.collidepoint(pg.mouse.get_pos()) == True:
+                    self.textColorFxPlus = self.colorWhite
+                    if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                        self.changeVolume("fx","more"); print("fx + volume set to " +str(self.musicLevel))
+                        break
+                else:
+                    self.textColorFxPlus = self.colorGrey
+                if self.returnBlit.collidepoint(pg.mouse.get_pos()) == True:
+                    self.textColorReturn = self.colorWhite
+                    if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                        print('return'); save.saveSettings(self.musicState, self.fullscreenState, self.displayFPS, self.musicLevel, self.fxLevel)
+                        self.changeMenu("settingsMenu")
+                        break
+                else:
+                    self.textColorReturn = self.colorGrey
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_SEMICOLON:
+                        self.washTheScreen(); self.toggleMusic(); print('toggle music')
+                    if event.key == pg.K_r or event.key == pg.K_ESCAPE:
+                        print('return'); save.saveSettings(self.musicState, self.fullscreenState, self.displayFPS, self.musicLevel, self.fxLevel)
+                        self.changeMenu("settingsMenu")
+                if event.type == pg.QUIT:
+                    self.changeMenu("areYouSureToQuit")
+        # ========================================== SETTINGS MENU 2 ================================================= #
+        if self.state == 'settingsMenu':
+            for event in pg.event.get():
+                if self.musicMenuBlit.collidepoint(pg.mouse.get_pos()) == True:
+                    self.textColorMusicMenu = self.colorWhite
+                    if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                        self.washTheScreen(); print('music menu'); self.changeMenu("musicMenu")
+                        break
+                else:
+                    self.textColorMusicMenu = self.colorGrey
                 if self.fullScreenToggleBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorFullscreenToggle = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
@@ -350,14 +456,14 @@ class Game:
                 if self.resetSaveBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.resetSaveColor = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        self.washTheScreen(); self.lastDestroy = "saves"; self.areYouSureToDestroy()
+                        self.washTheScreen(); self.lastDestroy = "saves"; self.changeMenu("areYouSureToDestroy")
                         break
                 else:
                     self.resetSaveColor = self.colorGrey
                 if self.resetSettingsBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.resetSettingsColor = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        self.washTheScreen(); self.lastDestroy = "settings" ; self.areYouSureToDestroy()
+                        self.washTheScreen(); self.lastDestroy = "settings" ; self.changeMenu("areYouSureToDestroy")
                         break
                 else:
                     self.resetSettingsColor = self.colorGrey
@@ -371,21 +477,23 @@ class Game:
                 if self.returnBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorReturn = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print('return'); save.saveSettings(self.musicState, self.fullscreenState, self.displayFPS); self.changeMenu("mainMenu")
+                        print('return'); save.saveSettings(self.musicState, self.fullscreenState, self.displayFPS, self.musicLevel, self.fxLevel)
+                        self.changeMenu("mainMenu")
                         break
                 else:
                     self.textColorReturn = self.colorGrey
                 if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_SEMICOLON:
-                        self.washTheScreen(); self.toggleMusic(); print('music toggle to ' + str(self.musicState))
+                    if event.key == pg.K_q:
+                        self.washTheScreen(); self.changeMenu("musicMenu"); print('music menu')
                     if event.key == pg.K_f:
                         self.washTheScreen(); self.toggleFullscreen(); print('fullscreen toggle to ' + str(self.fullscreenState))
                     if event.key == pg.K_c:
                         self.washTheScreen(); self.toggleFPS(); print('displayFPS toggle to ' + str(self.displayFPS))
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
-                        print('return'); save.saveSettings(self.musicState, self.fullscreenState, self.displayFPS) ; self.mainMenu()
+                        print('return'); save.saveSettings(self.musicState, self.fullscreenState, self.displayFPS, self.musicLevel, self.fxLevel)
+                        self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
-                    self.areYouSure()
+                    self.changeMenu("areYouSureToQuit")
         # ========================================== SURE TO QUIT SCREEN ============================================= #
         if self.state == 'areYouSureToQuit':
             for event in pg.event.get():
@@ -441,7 +549,7 @@ class Game:
                     if event.key == pg.K_n or event.key == pg.K_ESCAPE:
                         print('no'); self.changeMenu("settingsMenu")
                 if event.type == pg.QUIT:
-                    self.areYouSure()
+                    self.changeMenu("areYouSureToDestroy")
         # ========================================== PLAY MENU ======================================================= #
         if self.state == 'playMenu':
             for event in pg.event.get():
@@ -470,13 +578,13 @@ class Game:
                     self.textColorReturn = self.colorGrey
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_c:
-                        print('continue')
+                        print('continue'); self.continueGame()
                     if event.key == pg.K_n:
                         print('new game'); self.changeMenu("newGame")
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
                         print('return'); self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
-                    self.areYouSure(); print('quit')
+                    self.changeMenu("areYouSureToQuit"); print('quit')
         # ========================================== MAIN MENU ======================================================= #
         if self.state == 'mainMenu':
             for event in pg.event.get():
@@ -504,7 +612,7 @@ class Game:
                 if self.quitOptionBlit.collidepoint(pg.mouse.get_pos()) == True:
                     self.textColorQuit = self.colorWhite
                     if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                        print("quit"); self.areYouSure()
+                        print("quit"); self.changeMenu("areYouSureToQuit")
                         break
                 else:
                     self.textColorQuit = self.colorGrey
@@ -516,9 +624,9 @@ class Game:
                     if event.key == pg.K_h:
                         print('help'); self.changeMenu("helpMenu")
                     if event.key == pg.K_a or event.key == pg.K_ESCAPE:
-                        print('quit'); self.areYouSure()
+                        print('quit'); self.changeMenu("areYouSureToQuit")
                 if event.type == pg.QUIT:
-                    self.areYouSure()
+                    self.changeMenu("areYouSureToQuit")
         # ========================================== HELP MENU ======================================================= #
         if self.state == 'helpMenu':
             for event in pg.event.get():
@@ -533,7 +641,7 @@ class Game:
                     if event.key == pg.K_r or event.key == pg.K_ESCAPE:
                         print('return'); self.changeMenu("mainMenu")
                 if event.type == pg.QUIT:
-                    self.areYouSure()
+                    self.changeMenu("areYouSureToQuit")
 
     # >>> RENDER THE WINDOW. REALLY. >>>
     def renderWindow(self):
@@ -562,13 +670,26 @@ class Game:
             self.actualChoicePreviewBlit = self.screen.blit(self.actualChoicePreview, (700, 100))
         if self.state == 'settingsMenu':
             self.titleBlit = self.screen.blit(self.guiFont.render("Settings Menu", 4, (255,255,255)), (100,175))
-            self.musicToggleBlit = self.screen.blit(self.guiFontSub.render("(M) - Music : " + str(self.musicState), 4, self.textColorMusicToggle), (115, 250))
-            self.fullScreenToggleBlit = self.screen.blit(self.guiFontSub.render("(F) - Fullscreen : " + str(self.fullscreenState), 4, self.textColorFullscreenToggle), (115,300))
-            self.displayFPSToggleBlit = self.screen.blit(self.guiFontSub.render("(C) - FPS Counter : " + str(self.displayFPS),4, self.textColordisplayFPSToggle), (115,350))
+            self.fullScreenToggleBlit = self.screen.blit(self.guiFontSub.render("(F) - Fullscreen : " + str(self.fullscreenState), 4, self.textColorFullscreenToggle), (115,250))
+            self.displayFPSToggleBlit = self.screen.blit(self.guiFontSub.render("(C) - FPS Counter : " + str(self.displayFPS),4, self.textColordisplayFPSToggle), (115,300))
+            self.musicMenuBlit = self.screen.blit(self.guiFontSub.render("(A) - Audio Menu",4,self.textColorMusicMenu),(115,350))
             self.resetSaveBlit = self.screen.blit(self.guiFontSub.render("/!\ RESET SAVES /!\ ", 4, self.resetSaveColor),(115,400))
             self.resetSettingsBlit = self.screen.blit(self.guiFontSub.render("/!\ RESET SETTINGS /!\ ", 4, self.resetSettingsColor),(115,450))
             self.returnBlit = self.screen.blit(self.guiFontSub.render ("(R) - Return", 4, self.textColorReturn), (115, 500))
-            self.settiingsWheelBlit = self.screen.blit(self.settingsWheel, (700,100))
+            self.settingsWheelBlit = self.screen.blit(self.settingsWheel, (700,100))
+        if self.state == 'musicMenu':
+            self.titleBlit = self.screen.blit(self.guiFont.render("Audio Menu", 4, (255,255,255)), (100,175))
+            self.musicToggleBlit = self.screen.blit(self.guiFontSub.render("(M) - Music : " + str(self.musicState), 4, self.textColorMusicToggle), (115, 250))
+            self.musicButtonPlusBlit = self.screen.blit(self.guiFontSub.render("+",4, self.textColorMusicPlus), (385,300))
+            self.musicButtonMoinsBlit = self.screen.blit(self.guiFontSub.render("-",4, self.textColorMusicMoins), (115,300))
+            self.musicBlit = self.screen.blit(self.guiFontSub.render("Music Level",4, self.colorGrey), (150,300))
+            self.musicLevelBlit = self.screen.blit(self.guiFontSub.render("["+str(self.musicLevel)+"]",4,self.colorGrey),(420,300))
+            self.fxButtonPlusBlit = self.screen.blit(self.guiFontSub.render("+",4, self.textColorFxPlus), (385,350))
+            self.fxButtonMoinsBlit = self.screen.blit(self.guiFontSub.render("-",4, self.textColorFxMoins), (115,350))
+            self.fxBlit = self.screen.blit(self.guiFontSub.render("FX Level",4, self.colorGrey), (175,350))
+            self.fxLevelBlit = self.screen.blit(self.guiFontSub.render("["+str(self.fxLevel)+"]",4,self.colorGrey),(420,350))
+            self.returnBlit = self.screen.blit(self.guiFontSub.render ("(R) - Return", 4, self.textColorReturn), (115, 400))
+            self.musicIconBlit = self.screen.blit(self.musicIcon, (700,100))
         if self.state == 'helpMenu':
             self.titleBlit = self.screen.blit(self.guiFont.render("Help Menu", 4, (255,255,255)), (100,175))
             self.helpText1Blit = self.screen.blit(self.guiFontSub.render("This game is a project from SergentThomasKelly", 4, self.colorGrey), (115,250))
@@ -593,8 +714,19 @@ class Game:
             self.screen.blit(self.screenWasher,(0,0))
             self.mapBlit = self.screen.blit(self.mapPic, (self.mapPosX, self.mapPosY))
             self.persoBlit = self.screen.blit(self.playerImg, (self.posX, self.posY), self.picCoordinates); self.persoRect = pg.Rect(self.posX, self.posY, self.persoBlit.w-2, self.persoBlit.h-2)
+        if self.state == 'dialog':
+            self.screen.blit(self.dialogBox,(230,400))
+            self.screen.blit(self.dialogFont.render(self.whoSpoke, 4, self.colorWhite), (275, 435))
+            self.screen.blit(self.dialogFont.render(self.textDialog[0], 4, self.colorWhite), (300, 500))
+            self.screen.blit(self.dialogFont.render(self.textDialog[1], 4, self.colorWhite), (300, 540))
+            self.screen.blit(self.dialogFont.render("Press RETURN", 4, self.colorGrey),(710,635))
         if self.state != 'loading':
             self.screen.blit(self.warningVersion,(0,0))
+        pg.display.update()
+
+    # >>> WASH THE SCREEN >>>
+    def washTheScreen(self):
+        self.screen.blit(self.screenWasher, (0,0))
         pg.display.update()
 
     # >>> DO YOU REALLY NEED COMMENTS FOR THIS ONE ? >>>

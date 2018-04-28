@@ -38,14 +38,14 @@ def resetSave():
         os.remove("savegames.txt")
 
 # >>> SAVE SETTINGS >>>
-def saveSettings(musicState,fullscreenState,fpsCounterState):
+def saveSettings(musicState,fullscreenState,fpsCounterState,musicLevel,fxLevel):
     if os.path.isfile("settings.txt")==True:
-        settings = open("settings.txt","a")
-        settings.write(str(musicState)+str(":")+str(fullscreenState)+str(":")+str(fpsCounterState)+str(":"))
+        settings = open("settings.txt","w")
+        settings.write(str(musicState)+str(":")+str(fullscreenState)+str(":")+str(fpsCounterState)+str(":")+str(musicLevel)+str(":"+str(fxLevel)))
         settings.close()
     else:
         settings = open("settings.txt","w")
-        settings.write(str(musicState)+str(":")+str(fullscreenState)+str(":")+str(fpsCounterState)+str(":"))
+        settings.write(str(musicState)+str(":")+str(fullscreenState)+str(":")+str(fpsCounterState)+str(":")+str(musicLevel)+str(":")+str(fxLevel))
         settings.close()
 
 # >>> LOAD SETTINGS SAVED PREVIOUSLY >>>
@@ -54,7 +54,8 @@ def readSettings():
     settingsSaved = settings.readline()
     settingsSaved = settingsSaved.split(":")
     musicState = settingsSaved[0]; fullscreenState = settingsSaved[1]; fpsCounterState = settingsSaved[2]
-    return [musicState, fullscreenState, fpsCounterState]
+    musicLevel = settingsSaved[3]; fxLevel = settingsSaved[4]
+    return [musicState, fullscreenState, fpsCounterState, musicLevel, fxLevel]
 
 # >>> RESET THE SETTINGS TO THE DEFAULT VALUES >>>
 def resetSettings():

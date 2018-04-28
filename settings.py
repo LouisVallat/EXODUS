@@ -8,6 +8,8 @@ WIDTH = 1280
 HEIGHT = 720
 TITLE = "EXODUS (PRE-BETA RELEASE -- GITHUB EDITION)"
 playerAnimationLoop = 1
+leaveRoomTrigger = bathBloodHorrorTrigger = False
+L1EVENTLIST = [leaveRoomTrigger,bathBloodHorrorTrigger]
 playerCoordinates = {"female":{"down":{1:(2,0,30,33), 2:(32,0,33,32), 3:(64,0,31,33)},
                                 "left":{1:(4,33,27,31), 2:(36,32,25,33), 3:(68,33,24,31)},
                                 "right":{1:(1,65,27,31), 2:(35,64,25,32), 3:(68,65,24,31)},
