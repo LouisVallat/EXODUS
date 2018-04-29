@@ -41,11 +41,11 @@ def resetSave():
 def saveSettings(musicState,fullscreenState,fpsCounterState,musicLevel,fxLevel):
     if os.path.isfile("settings.txt")==True:
         settings = open("settings.txt","w")
-        settings.write(str(musicState)+str(":")+str(fullscreenState)+str(":")+str(fpsCounterState)+str(":")+str(musicLevel)+str(":"+str(fxLevel)))
+        settings.write(str(musicState)+":"+str(fullscreenState)+":"+str(fpsCounterState)+":"+str(float(musicLevel))+":"+str(float(fxLevel)))
         settings.close()
     else:
         settings = open("settings.txt","w")
-        settings.write(str(musicState)+str(":")+str(fullscreenState)+str(":")+str(fpsCounterState)+str(":")+str(musicLevel)+str(":")+str(fxLevel))
+        settings.write(str(musicState)+":"+str(fullscreenState)+":"+str(fpsCounterState)+":"+str(float(musicLevel))+":"+str(float(fxLevel)))
         settings.close()
 
 # >>> LOAD SETTINGS SAVED PREVIOUSLY >>>
