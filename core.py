@@ -774,7 +774,7 @@ class Game:
     # >>> DO YOU REALLY NEED COMMENTS FOR THIS ONE ? >>>
     def quit(self):
         pg.quit()
-        sys.exit()
+        #sys.exit()
 
     # >>> RESTART THE WHOLE GAME >>>
     def restartGame(self):
