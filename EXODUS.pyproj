@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{cf93a377-56fe-4882-a1f8-eaf0951d4499}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>core.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="core.py" />
+    <Compile Include="savesystem.py" />
+    <Compile Include="settings.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="map\l1.png" />
+    <Content Include="music\credits.txt" />
+    <Content Include="sprites\icon\icon2.png" />
+    <Content Include="sprites\loading\loading.png" />
+    <Content Include="sprites\loading\warn.png" />
+    <Content Include="sprites\menus\main.jpg" />
+    <Content Include="sprites\menus\music.jpg" />
+    <Content Include="sprites\menus\play.jpg" />
+    <Content Include="sprites\menus\settings.jpg" />
+    <Content Include="sprites\menus\ui.png" />
+    <Content Include="sprites\player\female.png" />
+    <Content Include="sprites\player\female\ante.png" />
+    <Content Include="sprites\player\female\postWithBag.png" />
+    <Content Include="sprites\player\female\postWithoutBag.png" />
+    <Content Include="sprites\player\male.png" />
+    <Content Include="sprites\player\male\ante.png" />
+    <Content Include="sprites\player\male\postWithBag.png" />
+    <Content Include="sprites\player\male\postWithoutBag.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="map" />
+    <Folder Include="music" />
+    <Folder Include="sprites\" />
+    <Folder Include="sprites\icon" />
+    <Folder Include="sprites\loading" />
+    <Folder Include="sprites\menus" />
+    <Folder Include="sprites\player" />
+    <Folder Include="sprites\player\female" />
+    <Folder Include="sprites\player\male" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>
